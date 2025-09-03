@@ -56,4 +56,23 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.gson)
+    implementation(libs.converter.gson)
+
+    implementation(libs.hilt.android)
+
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    //Navigation
+    implementation(libs.androidx.navigation.compose.android)
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    //Permission
+    implementation ("com.google.accompanist:accompanist-permissions:0.25.0")
+    //datastore
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 }
