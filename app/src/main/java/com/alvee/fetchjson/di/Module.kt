@@ -1,5 +1,10 @@
 package com.alvee.fetchjson.di
 
+import android.app.Application
+import com.alvee.fetchjson.data.remote.ApiService
+import com.alvee.fetchjson.data.repository.RepositoryImpl
+import com.alvee.fetchjson.domain.repository.Repository
+import com.alvee.fetchjson.domain.usecase.GetPostsUsecase
 import com.alvee.fetchjson.utils.Constants.BASE_URL
 import dagger.Module
 import dagger.Provides
@@ -15,6 +20,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object Module {
+
+    @Provides
+    @Singleton
+    fun provideApplication(app: Application): Application = app
+
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient =
@@ -32,4 +42,23 @@ object Module {
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+
+    @Provides
+    @Singleton
+    fun provideApiService(retrofit: Retrofit) : ApiService =
+        retrofit.create(ApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideRepository(apiService: ApiService): Repository {
+        return RepositoryImpl(apiService = apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPostsUseCase(repository: Repository): GetPostsUsecase{
+        return GetPostsUsecase(
+            repository = repository
+        )
+    }
 }
