@@ -1,14 +1,13 @@
-package com.alvee.fetchjson.data.repository
+package com.alvee.fetchjson.data.datasource
 
 import com.alvee.fetchjson.data.model.api_model.PostItemResponseDto
 import com.alvee.fetchjson.data.remote.ApiService
-import com.alvee.fetchjson.domain.repository.Repository
 import javax.inject.Inject
 
-class RepositoryImpl @Inject constructor(
+class RemoteDatasource @Inject constructor(
     private val apiService: ApiService
-) : Repository {
-    override suspend fun getPosts(start: Int, limit: Int): List<PostItemResponseDto> {
+) {
+    suspend fun getPosts(start: Int, limit: Int): List<PostItemResponseDto> {
 
         val response = apiService.getPosts(start = start, limit = limit)
 

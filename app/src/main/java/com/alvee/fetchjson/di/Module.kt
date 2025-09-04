@@ -1,14 +1,22 @@
 package com.alvee.fetchjson.di
 
-import android.app.Application
+import android.content.Context
+import androidx.room.Room
+import com.alvee.fetchjson.data.database.ContentDatabase
+import com.alvee.fetchjson.data.database.dao.PostFeedDao
+import com.alvee.fetchjson.data.datasource.LocalDatasource
+import com.alvee.fetchjson.data.datasource.RemoteDatasource
 import com.alvee.fetchjson.data.remote.ApiService
-import com.alvee.fetchjson.data.repository.RepositoryImpl
-import com.alvee.fetchjson.domain.repository.Repository
+import com.alvee.fetchjson.data.repository.PostFeedRepositoryImpl
+import com.alvee.fetchjson.domain.repository.PostFeedRepository
+import com.alvee.fetchjson.domain.usecase.GetCachedPostsUsecase
 import com.alvee.fetchjson.domain.usecase.GetPostsUsecase
 import com.alvee.fetchjson.utils.Constants.BASE_URL
+import com.alvee.fetchjson.utils.NetworkConnectivityObserver
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -20,11 +28,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object Module {
-
-    @Provides
-    @Singleton
-    fun provideApplication(app: Application): Application = app
-
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient =
@@ -34,6 +37,7 @@ object Module {
             .writeTimeout(3, TimeUnit.MINUTES)
             .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
             .build()
+
     @Provides
     @Singleton
     fun provideRetrofit(client: OkHttpClient): Retrofit =
@@ -45,20 +49,73 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit) : ApiService =
+    fun provideApiService(retrofit: Retrofit): ApiService =
         retrofit.create(ApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideRepository(apiService: ApiService): Repository {
-        return RepositoryImpl(apiService = apiService)
+    fun providePostFeedDao(contentDatabase: ContentDatabase): PostFeedDao {
+        return contentDatabase.postFeedDao
     }
 
     @Provides
     @Singleton
-    fun provideGetPostsUseCase(repository: Repository): GetPostsUsecase{
-        return GetPostsUsecase(
-            repository = repository
+    fun provideContentDatabase(@ApplicationContext context: Context): ContentDatabase {
+        return Room.databaseBuilder(
+            context,
+            ContentDatabase::class.java,
+            ContentDatabase.DATABASE_NAME
         )
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRemoteDatasource(apiService: ApiService): RemoteDatasource {
+        return RemoteDatasource(apiService = apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocalDatasource(postFeedDao: PostFeedDao): LocalDatasource {
+        return LocalDatasource(postFeedDao = postFeedDao)
+    }
+
+    @Provides
+    @Singleton
+    fun providePostFeedRepository(
+        remoteDatasource: RemoteDatasource,
+        localDatasource: LocalDatasource
+    ): PostFeedRepository {
+        return PostFeedRepositoryImpl(
+            remoteDatasource = remoteDatasource,
+            localDatasource = localDatasource
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPostsUseCase(
+        postFeedRepository: PostFeedRepository
+    ): GetPostsUsecase {
+        return GetPostsUsecase(
+            postFeedRepository = postFeedRepository
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetCachedPostsUseCase(
+        postFeedRepository: PostFeedRepository
+    ): GetCachedPostsUsecase {
+        return GetCachedPostsUsecase(
+            postFeedRepository = postFeedRepository
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideNetworkConnectivityObserver(@ApplicationContext context: Context): NetworkConnectivityObserver {
+        return NetworkConnectivityObserver(context)
     }
 }

@@ -1,6 +1,6 @@
 package com.alvee.fetchjson.data.model.api_model
 
-import com.alvee.fetchjson.domain.model.PostItemResponse
+import com.alvee.fetchjson.domain.model.PostItem
 
 data class PostItemResponseDto(
     val body: String,
@@ -8,10 +8,10 @@ data class PostItemResponseDto(
     val title: String,
     val userId: Int
 )
-fun PostItemResponseDto.toDomain(): PostItemResponse{
-    return PostItemResponse(
+fun PostItemResponseDto.toDomain(): PostItem{
+    return PostItem(
         body = body,
-        id = id,
+        postId = id,
         title = title,
         userId = userId
     )

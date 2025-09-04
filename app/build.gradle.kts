@@ -78,4 +78,9 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-permissions:0.25.0")
     //datastore
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    //Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 }

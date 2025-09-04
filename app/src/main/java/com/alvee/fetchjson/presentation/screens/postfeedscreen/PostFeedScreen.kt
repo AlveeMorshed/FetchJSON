@@ -1,6 +1,7 @@
 package com.alvee.fetchjson.presentation.screens.postfeedscreen
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.alvee.fetchjson.utils.NetworkStatus
 
 private const val TAG = "PostFeedScreen"
 
@@ -32,18 +35,43 @@ fun PostFeedScreen(
 ) {
     val context = LocalContext.current
     val state by postFeedViewModel.state.collectAsState()
+    val networkStatus by postFeedViewModel.networkStatus.collectAsState()
     val listState = rememberLazyListState()
+
     val isAtLastPost by remember {
         derivedStateOf {
             val lastVisiblePostIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
             lastVisiblePostIndex == state.postList.lastIndex
         }
     }
-    LaunchedEffect(isAtLastPost) {
+    Log.d(TAG, "PostFeedScreen: NetworkStatus $networkStatus")
+    LaunchedEffect(isAtLastPost, networkStatus) {
         Log.d(TAG, "PostFeedScreen: LaunchedEffect Called")
-        if (isAtLastPost && state.postList.isNotEmpty()) {
-            Log.d(TAG, "PostFeedScreen: ${state.postList.size}")
-            postFeedViewModel.getPosts(state.postList.size)
+        Log.d(TAG, "PostFeedScreen: ${state.postList.size}")
+        when(networkStatus){
+            NetworkStatus.Available -> {
+                Log.d(TAG, "Network Available - fetching from remote")
+                if (isAtLastPost || state.postList.isEmpty()) postFeedViewModel.getPosts(state.postList.size)
+            }
+            else -> {
+                Log.d(TAG, "Network Unavailable - getting cached posts")
+                postFeedViewModel.getCachedPosts(1)
+            }
+        }
+    }
+
+    if (networkStatus == NetworkStatus.Lost || networkStatus == NetworkStatus.Unavailable) {
+        Log.d(TAG, "PostFeedScreen: $networkStatus")
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.error)
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No internet connection - showing cached data",
+            )
         }
     }
 
@@ -55,7 +83,7 @@ fun PostFeedScreen(
                 Modifier.padding(32.dp)
             ) {
                 Column {
-                    Text(text = post.id.toString())
+                    Text(text = post.postId.toString())
                     Text(text = post.title)
                 }
 
