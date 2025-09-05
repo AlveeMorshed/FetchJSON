@@ -13,7 +13,6 @@ data class PostItem(
 
 fun PostItem.toDto(): PostItemResponseDto{
     return PostItemResponseDto(
-        userId = userId,
         id = postId,
         title = title,
         body = body

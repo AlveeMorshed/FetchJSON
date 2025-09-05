@@ -8,6 +8,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
@@ -33,7 +34,7 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
 
         @Volatile
         private var INSTANCE: DataStoreManager? = null
-        val CURRENT_USER_ID = stringPreferencesKey(Constants.CURRENT_USER_ID)
+        val CURRENT_USER_ID = intPreferencesKey(Constants.CURRENT_USER_ID)
         val USER_EMAIL = stringPreferencesKey(Constants.USER_EMAIL)
         val USER_PASSWORD = stringPreferencesKey(Constants.USER_PASSWORD)
         val PASSWORD_IV = stringPreferencesKey(Constants.PASSWORD_IV)
@@ -51,9 +52,8 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
     init {
         generateOrGetSecretKey()
     }
-    private fun generateUserId(email: String): String {
-        // Create a consistent hash-based ID from email
-        return email.hashCode().toString().removePrefix("-")
+    private fun generateUserId(email: String): Int {
+        return kotlin.math.abs(email.hashCode())
     }
 
     // Save data
@@ -242,18 +242,18 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    suspend fun getCurrentUserId(): String? {
-        return getString(CURRENT_USER_ID).first()
+    suspend fun getCurrentUserId(): Int? {
+        return getInt(CURRENT_USER_ID).first().takeIf { it != 0 }
     }
 
-    fun getCurrentUserIdFlow(): Flow<String?> {
-        return getString(CURRENT_USER_ID)
+    fun getCurrentUserIdFlow(): Flow<Int> {
+        return getInt(CURRENT_USER_ID)
     }
 
     suspend fun logoutUser() {
         dataStore.edit { preferences ->
             preferences[IS_LOGGED_IN] = false
-            preferences[CURRENT_USER_ID] = ""
+            preferences[CURRENT_USER_ID] = 0
         }
     }
 

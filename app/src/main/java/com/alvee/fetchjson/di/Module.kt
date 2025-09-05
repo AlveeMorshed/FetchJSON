@@ -91,11 +91,13 @@ object Module {
     @Singleton
     fun providePostFeedRepository(
         remoteDatasource: RemoteDatasource,
-        localDatasource: LocalDatasource
+        localDatasource: LocalDatasource,
+        dataStoreManager: DataStoreManager
     ): PostFeedRepository {
         return PostFeedRepositoryImpl(
             remoteDatasource = remoteDatasource,
-            localDatasource = localDatasource
+            localDatasource = localDatasource,
+            dataStoreManager = dataStoreManager
         )
     }
 

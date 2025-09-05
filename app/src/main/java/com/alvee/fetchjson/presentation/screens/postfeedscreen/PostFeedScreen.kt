@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.alvee.fetchjson.presentation.screens.Screens
+import com.alvee.fetchjson.utils.DataStoreManager
 import com.alvee.fetchjson.utils.NetworkStatus
 
 private const val TAG = "PostFeedScreen"
@@ -36,6 +37,7 @@ fun PostFeedScreen(
     postFeedViewModel: PostFeedViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val dataStoreManager = DataStoreManager.getInstance(context)
     val state by postFeedViewModel.state.collectAsState()
     val networkStatus by postFeedViewModel.networkStatus.collectAsState()
     val listState = rememberLazyListState()
@@ -57,7 +59,7 @@ fun PostFeedScreen(
             }
             else -> {
                 Log.d(TAG, "Network Unavailable - getting cached posts")
-                postFeedViewModel.getCachedPosts(1)
+                postFeedViewModel.getCachedPosts(dataStoreManager.getCurrentUserId()?:0)
             }
         }
     }

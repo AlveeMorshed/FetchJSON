@@ -6,9 +6,8 @@ data class PostItemResponseDto(
     val body: String,
     val id: Int,
     val title: String,
-    val userId: Int
 )
-fun PostItemResponseDto.toDomain(): PostItem{
+fun PostItemResponseDto.toDomain(userId: Int): PostItem{
     return PostItem(
         body = body,
         postId = id,
