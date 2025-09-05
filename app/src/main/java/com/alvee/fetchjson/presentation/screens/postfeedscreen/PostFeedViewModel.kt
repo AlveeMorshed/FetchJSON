@@ -26,7 +26,7 @@ class PostFeedViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     private val _networkStatus = MutableStateFlow(
-        if(networkConnectivityObserver.isOnline()) NetworkStatus.Available else NetworkStatus.Unavailable
+        if (networkConnectivityObserver.isOnline()) NetworkStatus.Available else NetworkStatus.Unavailable
     )
     val networkStatus = _networkStatus.asStateFlow()
 
@@ -44,7 +44,10 @@ class PostFeedViewModel @Inject constructor(
             try {
                 val newPosts = getPostsUsecase(userId = 1, startIndex = start)
                 //Log.d(TAG, "getPosts: ${newPosts.indices}")
-                Log.d(TAG, "getPosts: ${(_state.value.postList + newPosts).toMutableList().indices}")
+                Log.d(
+                    TAG,
+                    "getPosts: ${(_state.value.postList + newPosts).toMutableList().indices}"
+                )
                 _state.value = _state.value.copy(
                     postList = (_state.value.postList + newPosts).toMutableList(),
                     isLoading = false,

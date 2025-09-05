@@ -12,6 +12,7 @@ import com.alvee.fetchjson.domain.repository.PostFeedRepository
 import com.alvee.fetchjson.domain.usecase.GetCachedPostsUsecase
 import com.alvee.fetchjson.domain.usecase.GetPostsUsecase
 import com.alvee.fetchjson.utils.Constants.BASE_URL
+import com.alvee.fetchjson.utils.DataStoreManager
 import com.alvee.fetchjson.utils.NetworkConnectivityObserver
 import dagger.Module
 import dagger.Provides
@@ -28,6 +29,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object Module {
+    @Provides
+    @Singleton
+    fun provideDataStoreManager(@ApplicationContext context: Context): DataStoreManager {
+        return DataStoreManager.getInstance(context)
+    }
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient =

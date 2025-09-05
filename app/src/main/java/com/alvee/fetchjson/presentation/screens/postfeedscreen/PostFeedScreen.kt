@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.alvee.fetchjson.presentation.screens.Screens
 import com.alvee.fetchjson.utils.NetworkStatus
 
 private const val TAG = "PostFeedScreen"
@@ -74,6 +76,15 @@ fun PostFeedScreen(
             )
         }
     }
+    if (state.isLoading && state.postList.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
 
     LazyColumn(
         state = listState
@@ -90,7 +101,7 @@ fun PostFeedScreen(
             }
 
         }
-        if (state.isLoading) {
+        if (state.isLoading && state.postList.isNotEmpty()) {
             item {
                 Box(
                     modifier = Modifier

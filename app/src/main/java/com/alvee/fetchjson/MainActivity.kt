@@ -24,10 +24,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FetchJSONTheme {
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     navController = rememberNavController()
                     Navigation(
-                        navController = navController
+                        navController = navController,
                     )
                 }
             }
