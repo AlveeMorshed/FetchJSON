@@ -110,12 +110,11 @@ fun PostFeedScreen(
             placeholder = { Text(stringResource(R.string.search_bar_placeholder_text)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 4.dp)
+                .padding(vertical = 12.dp)
                 .height(52.dp),
             singleLine = true,
             shape = RoundedCornerShape(12.dp)
         )
-        Spacer(modifier = Modifier.height(6.dp))
         LazyColumn(
             state = listState,
             verticalArrangement = Arrangement.spacedBy(12.dp)

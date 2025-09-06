@@ -27,7 +27,6 @@ fun Navigation(
         }
         composable(route = Screens.RegisterScreen.route) {
             RegisterScreen(
-                navHostController = navController,
                 onRegistrationSuccess = {
                     navController.navigate(Screens.LoginScreen.route) {
                         popUpTo(Screens.RegisterScreen.route) {

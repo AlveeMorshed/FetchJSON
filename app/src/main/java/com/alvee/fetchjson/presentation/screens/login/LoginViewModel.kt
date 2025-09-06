@@ -45,6 +45,9 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
+    fun togglePasswordVisibility() {
+        _uiState.value = _uiState.value.copy(isPasswordVisible = !_uiState.value.isPasswordVisible)
+    }
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)

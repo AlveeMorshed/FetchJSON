@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -20,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +39,7 @@ import com.alvee.fetchjson.presentation.screens.account.AccountScreen
 import com.alvee.fetchjson.presentation.screens.favorite.FavoritesScreen
 import com.alvee.fetchjson.presentation.screens.postfeed.PostFeedScreen
 import com.alvee.fetchjson.presentation.screens.postfeed.SharedFeedViewModel
+import com.alvee.fetchjson.ui.theme.RedFirebrick
 import com.alvee.fetchjson.utils.Constants
 import com.alvee.fetchjson.utils.NetworkStatus
 
@@ -104,12 +105,12 @@ fun HomeScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.error)
-                            .padding(8.dp),
+                            .background(RedFirebrick),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = stringResource(R.string.offline_mode_banner_text),
+                            color = Color.White
                         )
                     }
                 }

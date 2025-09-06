@@ -63,8 +63,9 @@ fun SplashScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.fetchjson_logo),
                 contentDescription = "FetchJSON Logo",
+                modifier = Modifier.fillMaxSize(.45f)
             )
         }
     }

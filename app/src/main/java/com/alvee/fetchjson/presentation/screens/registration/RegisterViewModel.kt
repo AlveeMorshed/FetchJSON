@@ -25,11 +25,30 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun updatePassword(password: String) {
-        _uiState.value = _uiState.value.copy(password = password, errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            password = password,
+            passwordStrength = getPasswordStrength(password),
+            showPasswordStrength = password.isNotEmpty(),
+            isPasswordMatch = password.isNotEmpty() && _uiState.value.confirmPassword.isNotEmpty() &&
+                    password == _uiState.value.confirmPassword
+        )
     }
 
     fun updateConfirmPassword(confirmPassword: String) {
-        _uiState.value = _uiState.value.copy(confirmPassword = confirmPassword, errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            confirmPassword = confirmPassword,
+            showConfirmPasswordMatch = confirmPassword.isNotEmpty(),
+            isPasswordMatch = _uiState.value.password.isNotEmpty() && confirmPassword.isNotEmpty() &&
+                    _uiState.value.password == confirmPassword
+        )
+    }
+
+    fun togglePasswordVisibility() {
+        _uiState.value = _uiState.value.copy(isPasswordVisible = !_uiState.value.isPasswordVisible)
+    }
+
+    fun toggleConfirmPasswordVisibility() {
+        _uiState.value = _uiState.value.copy(isConfirmPasswordVisible = !_uiState.value.isConfirmPasswordVisible)
     }
 
     fun register() {
@@ -65,6 +84,18 @@ class RegisterViewModel @Inject constructor(
                     errorMessage = "Registration failed. Please try again."
                 )
             }
+        }
+    }
+
+    private fun getPasswordStrength(password: String): PasswordStrength {
+        return when {
+            password.length < 6 -> PasswordStrength.WEAK
+            password.length < 8 -> PasswordStrength.FAIR
+            password.length >= 8 && password.any { it.isDigit() } &&
+                    password.any { it.isUpperCase() } && password.any { it.isLowerCase() } &&
+                    password.any { "!@#$%^&*()_+-=[]{}|;:,.<>?".contains(it) } -> PasswordStrength.STRONG
+            password.length >= 8 -> PasswordStrength.GOOD
+            else -> PasswordStrength.WEAK
         }
     }
 }
