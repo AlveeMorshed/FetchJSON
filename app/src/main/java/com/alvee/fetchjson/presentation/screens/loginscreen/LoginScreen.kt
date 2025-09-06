@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.alvee.fetchjson.R
 import com.alvee.fetchjson.utils.filterEmailInput
 import com.alvee.fetchjson.utils.filterPasswordInput
 
@@ -46,8 +48,6 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit = {}
 ) {
     val uiState by loginViewModel.uiState.collectAsState()
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.isLoginSuccessful) {
         if (uiState.isLoginSuccessful) {
@@ -63,13 +63,13 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Welcome Back",
+            text = stringResource(R.string.welcome_text),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold
             )
         )
         Text(
-            text = "Sign in to your FetchJSON account",
+            text = stringResource(R.string.sign_in_title_text),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 24.dp, top = 4.dp)
@@ -78,8 +78,8 @@ fun LoginScreen(
         OutlinedTextField(
             value = uiState.email,
             onValueChange = { loginViewModel.updateEmail(it.filterEmailInput()) },
-            label = { Text("Email Address") },
-            placeholder = { Text("steve.jobs@email.com") },
+            label = { Text(stringResource(R.string.email_label_text)) },
+            placeholder = { Text(stringResource(R.string.email_placeholder_text)) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Email,
@@ -92,8 +92,8 @@ fun LoginScreen(
         OutlinedTextField(
             value = uiState.password,
             onValueChange = { loginViewModel.updatePassword(it.filterPasswordInput()) },
-            label = { Text("Password") },
-            placeholder = { Text("Enter your password") },
+            label = { Text(stringResource(R.string.password_label_text)) },
+            placeholder = { Text(stringResource(R.string.password_placeholder_text)) },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions.Default.copy(
@@ -115,7 +115,9 @@ fun LoginScreen(
             enabled = !uiState.isLoading && uiState.email.isNotBlank() && uiState.password.isNotBlank()
         ) {
             Text(
-                text = if (uiState.isLoading) "Signing In..." else "Sign In",
+                text = if (uiState.isLoading)
+                    stringResource(R.string.signing_in_text)
+                else stringResource(R.string.sign_in_button_text),
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
@@ -136,9 +138,9 @@ fun LoginScreen(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Don't have an account? ")
+            Text(stringResource(R.string.have_no_account_text))
             TextButton(onClick = { onNavigateToRegister() }) {
-                Text("Register here")
+                Text(stringResource(R.string.go_to_register_page_text))
             }
         }
     }

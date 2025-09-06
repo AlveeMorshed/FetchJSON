@@ -33,11 +33,6 @@ class RegisterViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(confirmPassword = confirmPassword, errorMessage = null)
     }
 
-    private suspend fun isEmailAlreadyRegistered(email: String): Boolean {
-        val storedEmail = dataStoreManager.getString(DataStoreManager.USER_EMAIL).first()
-        return storedEmail == email
-    }
-
     fun register() {
         viewModelScope.launch(Dispatchers.IO) {
             val currentState = _uiState.value
@@ -51,7 +46,7 @@ class RegisterViewModel @Inject constructor(
                 _uiState.value = currentState.copy(errorMessage = "Passwords do not match")
                 return@launch
             }
-            if(isEmailAlreadyRegistered(uiState.value.email)){
+            if (dataStoreManager.isEmailAlreadyRegistered(currentState.email)) {
                 _uiState.value = currentState.copy(errorMessage = "Email is already registered.\nPlease login or use a different email.")
                 return@launch
             }

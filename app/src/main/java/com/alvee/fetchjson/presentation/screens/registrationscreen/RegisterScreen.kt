@@ -21,13 +21,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.alvee.fetchjson.R
 import com.alvee.fetchjson.utils.filterEmailInput
 import com.alvee.fetchjson.utils.filterPasswordInput
 
@@ -50,13 +49,13 @@ fun RegisterScreen(
     val context = LocalContext.current
     val uiState by registerViewModel.uiState.collectAsState()
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-
     LaunchedEffect(uiState.isRegistrationSuccessful) {
         if (uiState.isRegistrationSuccessful) {
-            Toast.makeText(context, "Registration Successful! Please login", Toast.LENGTH_SHORT)
+            Toast.makeText(
+                context,
+                context.getString(R.string.registration_successful_toast_message),
+                Toast.LENGTH_SHORT
+            )
                 .show()
             onRegistrationSuccess()
         }
@@ -69,15 +68,14 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Heading
         Text(
-            text = "Create Your Account",
+            text = stringResource(R.string.register_page_title_text),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold
             )
         )
         Text(
-            text = "Join FetchJSON to explore and manage posts.",
+            text = stringResource(R.string.register_page_subtitle_text),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 24.dp, top = 4.dp)
@@ -86,8 +84,8 @@ fun RegisterScreen(
         OutlinedTextField(
             value = uiState.email,
             onValueChange = { registerViewModel.updateEmail(it.filterEmailInput()) },
-            label = { Text("Email Address") },
-            placeholder = { Text("steve.jobs@email.com") },
+            label = { stringResource(R.string.email_label_text) },
+            placeholder = { stringResource(R.string.email_placeholder_text) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Email,
@@ -101,8 +99,8 @@ fun RegisterScreen(
         OutlinedTextField(
             value = uiState.password,
             onValueChange = { registerViewModel.updatePassword(it.filterPasswordInput()) },
-            label = { Text("Password") },
-            placeholder = { Text("Enter your password") },
+            label = { Text(stringResource(R.string.password_label_text)) },
+            placeholder = { Text(stringResource(R.string.password_placeholder_text)) },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions.Default.copy(
@@ -117,8 +115,8 @@ fun RegisterScreen(
         OutlinedTextField(
             value = uiState.confirmPassword,
             onValueChange = { registerViewModel.updateConfirmPassword(it.filterPasswordInput()) },
-            label = { Text("Confirm Password") },
-            placeholder = { Text("Re-enter your password") },
+            label = { Text(stringResource(R.string.confirm_password_label_text)) },
+            placeholder = { Text(stringResource(R.string.confirm_password_placeholder_text)) },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions.Default.copy(
@@ -142,7 +140,8 @@ fun RegisterScreen(
                     && (uiState.password == uiState.confirmPassword)
         ) {
             Text(
-                text = if (uiState.isLoading) "Registering..." else "Register Account",
+                text = if (uiState.isLoading) stringResource(R.string.registering_text)
+                else stringResource(R.string.register_button_text),
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
@@ -164,9 +163,9 @@ fun RegisterScreen(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Already have an account? ")
+            Text(stringResource(R.string.have_an_account_text))
             TextButton(onClick = { onNavigateToLogin() }) {
-                Text("Login here")
+                Text(stringResource(R.string.go_to_login_page_text))
             }
         }
     }

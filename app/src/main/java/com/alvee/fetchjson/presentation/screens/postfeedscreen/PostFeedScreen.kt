@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,12 +23,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.alvee.fetchjson.R
 import com.alvee.fetchjson.presentation.screens.Screens
 import com.alvee.fetchjson.utils.DataStoreManager
 import com.alvee.fetchjson.utils.NetworkStatus
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 private const val TAG = "PostFeedScreen"
 
@@ -74,7 +80,7 @@ fun PostFeedScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "No internet connection - showing cached data",
+                text = stringResource(R.string.offline_mode_banner_text),
             )
         }
     }
@@ -87,34 +93,64 @@ fun PostFeedScreen(
             CircularProgressIndicator()
         }
     }
+    if (state.postList.isEmpty() && !state.isLoading && state.error.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = stringResource(R.string.no_posts_text))
+        }
+    }
+    Column {
+        Button(
+            onClick = {
+                CoroutineScope(Dispatchers.IO).launch {
+                    dataStoreManager.logoutUser()
 
-    LazyColumn(
-        state = listState
-    ) {
-        items(state.postList) { post ->
-            Box(
-                Modifier.padding(32.dp)
-            ) {
-                Column {
-                    Text(text = post.postId.toString())
-                    Text(text = post.title)
+                }
+                navHostController.navigate(Screens.LoginScreen.route) {
+                    popUpTo(Screens.PostFeedScreen.route) { inclusive = true }
+                }
+            },
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+        ) {
+            Text(text = stringResource(R.string.logout_button_text))
+        }
+
+        LazyColumn(
+            state = listState
+        ) {
+            items(state.postList) { post ->
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp)
+                ) {
+                    Column {
+                        Text(text = post.postId.toString())
+                        Text(text = post.title)
+                    }
+                    Text(text = post.userId.toString(),
+                        modifier = Modifier.align(Alignment.TopEnd))
+
                 }
 
             }
-
-        }
-        if (state.isLoading && state.postList.isNotEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            if (state.isLoading && state.postList.isNotEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
             }
         }
     }
-
 }

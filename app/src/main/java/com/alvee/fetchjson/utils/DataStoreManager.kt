@@ -4,6 +4,7 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -24,20 +25,33 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 
+private const val TAG = "DataStoreManager"
+
 class DataStoreManager(private val dataStore: DataStore<Preferences>) {
+
+    data class UserData(
+        val email: String,
+        val encryptedPassword: String,
+        val passwordIv: String,
+        val userId: Int
+    )
+
+    data class MultiUserState(
+        val users: Map<String, UserData> = emptyMap(),
+        val currentUserId: Int? = null,
+        val isLoggedIn: Boolean = false
+    )
 
     private val gson = Gson()
     private val keyAlias = "FetchJSONPasswordKey"
 
     companion object {
-        private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AI PharmaDataStore")
+        private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "FetchJSON DataStore")
 
         @Volatile
         private var INSTANCE: DataStoreManager? = null
+        val MULTI_USER_DATA = stringPreferencesKey(Constants.MULTI_USER_DATA)
         val CURRENT_USER_ID = intPreferencesKey(Constants.CURRENT_USER_ID)
-        val USER_EMAIL = stringPreferencesKey(Constants.USER_EMAIL)
-        val USER_PASSWORD = stringPreferencesKey(Constants.USER_PASSWORD)
-        val PASSWORD_IV = stringPreferencesKey(Constants.PASSWORD_IV)
         val IS_LOGGED_IN = booleanPreferencesKey(Constants.IS_LOGGED_IN)
         val SHOULD_LOG_OUT = booleanPreferencesKey(Constants.SHOULD_LOG_OUT)
 
@@ -49,14 +63,32 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
             }
         }
     }
+
     init {
         generateOrGetSecretKey()
     }
+
     private fun generateUserId(email: String): Int {
         return kotlin.math.abs(email.hashCode())
     }
 
-    // Save data
+    private suspend fun saveUserState(state: MultiUserState) {
+        dataStore.edit { preferences ->
+            preferences[MULTI_USER_DATA] = gson.toJson(state)
+            preferences[CURRENT_USER_ID] = state.currentUserId ?: 0
+            preferences[IS_LOGGED_IN] = state.isLoggedIn
+        }
+    }
+
+    private suspend fun loadUserState(): MultiUserState {
+        val jsonString = getString(MULTI_USER_DATA).first()
+        return if (jsonString != null) {
+            gson.fromJson(jsonString, MultiUserState::class.java)
+        } else {
+            MultiUserState()
+        }
+    }
+
     fun put(key: Preferences.Key<String>, value: String) {
         CoroutineScope(Dispatchers.IO).launch {
             dataStore.edit { preferences ->
@@ -96,7 +128,7 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
             }
         }
     }
-    // Retrieve data
+
     fun getString(key: Preferences.Key<String>): Flow<String?> {
         return dataStore.data.map { preferences ->
             preferences[key]
@@ -121,7 +153,6 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    // Clear data
     fun clear() {
         CoroutineScope(Dispatchers.IO).launch {
             dataStore.edit { preferences ->
@@ -130,7 +161,6 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    // Save custom object
     fun <T> putObject(key: Preferences.Key<String>, value: T) {
         CoroutineScope(Dispatchers.IO).launch {
             dataStore.edit { preferences ->
@@ -140,7 +170,6 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    // Retrieve custom object
     fun <T> getObject(key: Preferences.Key<String>, clazz: Class<T>): Flow<T?> {
         return dataStore.data.map { preferences ->
             val jsonString = preferences[key]
@@ -155,7 +184,8 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
         return if (keyStore.containsAlias(keyAlias)) {
             keyStore.getKey(keyAlias, null) as SecretKey
         } else {
-            val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
+            val keyGenerator =
+                KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
             val keyGenParameterSpec = KeyGenParameterSpec.Builder(
                 keyAlias,
                 KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
@@ -200,44 +230,47 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
 
     suspend fun registerUser(email: String, password: String): Boolean {
         return try {
+            val currentState = loadUserState()
+            if (currentState.users.containsKey(email)) {
+                return false
+            }
             val (encryptedPassword, iv) = encryptPassword(password)
             val userId = generateUserId(email)
 
-            dataStore.edit { preferences ->
-                preferences[USER_EMAIL] = email
-                preferences[USER_PASSWORD] = encryptedPassword
-                preferences[PASSWORD_IV] = iv
-                preferences[CURRENT_USER_ID] = userId
-                preferences[IS_LOGGED_IN] = true
-            }
+            val userData = UserData(email, encryptedPassword, iv, userId)
+            val newState = currentState.copy(
+                users = currentState.users + (email to userData),
+                currentUserId = userId,
+                isLoggedIn = true
+            )
+
+            saveUserState(newState)
             true
         } catch (e: Exception) {
+            Log.e(TAG, "Registration failed", e)
             false
         }
     }
 
     suspend fun loginUser(email: String, password: String): Boolean {
         return try {
-            val storedEmail = getString(USER_EMAIL).first()
-            val encryptedPassword = getString(USER_PASSWORD).first()
-            val iv = getString(PASSWORD_IV).first()
+            val currentState = loadUserState()
+            val userData = currentState.users[email] ?: return false
 
-            if (storedEmail == email && encryptedPassword != null && iv != null) {
-                val decryptedPassword = decryptPassword(encryptedPassword, iv)
-                if (decryptedPassword == password) {
-                    val userId = generateUserId(email)
-                    dataStore.edit { preferences ->
-                        preferences[CURRENT_USER_ID] = userId
-                        preferences[IS_LOGGED_IN] = true
-                    }
-                    true
-                } else {
-                    false
-                }
+            val decryptedPassword = decryptPassword(userData.encryptedPassword, userData.passwordIv)
+
+            if (decryptedPassword == password) {
+                val newState = currentState.copy(
+                    currentUserId = userData.userId,
+                    isLoggedIn = true
+                )
+                saveUserState(newState)
+                true
             } else {
                 false
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Login failed", e)
             false
         }
     }
@@ -250,18 +283,75 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
         return getInt(CURRENT_USER_ID)
     }
 
-    suspend fun logoutUser() {
-        dataStore.edit { preferences ->
-            preferences[IS_LOGGED_IN] = false
-            preferences[CURRENT_USER_ID] = 0
+    suspend fun isEmailAlreadyRegistered(email: String): Boolean {
+        return try {
+            val currentState = loadUserState()
+            currentState.users.containsKey(email)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to check email registration", e)
+            false
         }
     }
 
-    fun isUserRegistered(): Flow<Boolean> {
-        return dataStore.data.map { preferences ->
-            preferences[USER_EMAIL] != null &&
-                    preferences[USER_PASSWORD] != null &&
-                    preferences[PASSWORD_IV] != null
+    suspend fun getAllRegisteredUsers(): List<String> {
+        return try {
+            val currentState = loadUserState()
+            currentState.users.keys.toList()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get registered users", e)
+            emptyList()
+        }
+    }
+
+    suspend fun getCurrentUserEmail(): String? {
+        return try {
+            val currentState = loadUserState()
+            val currentUserId = currentState.currentUserId ?: return null
+            currentState.users.values.find { it.userId == currentUserId }?.email
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get current user email", e)
+            null
+        }
+    }
+
+    suspend fun removeUser(email: String): Boolean {
+        return try {
+            val currentState = loadUserState()
+            val userData = currentState.users[email] ?: return false
+
+            val newUsers = currentState.users.toMutableMap()
+            newUsers.remove(email)
+
+            val newState = if (currentState.currentUserId == userData.userId) {
+                currentState.copy(
+                    users = newUsers,
+                    currentUserId = null,
+                    isLoggedIn = false
+                )
+            } else {
+                currentState.copy(users = newUsers)
+            }
+
+            saveUserState(newState)
+            Log.d(TAG, "User removed: $email")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to remove user", e)
+            false
+        }
+    }
+
+    suspend fun logoutUser() {
+        try {
+            val currentState = loadUserState()
+            val newState = currentState.copy(
+                currentUserId = null,
+                isLoggedIn = false
+            )
+            saveUserState(newState)
+            Log.d(TAG, "User logged out")
+        } catch (e: Exception) {
+            Log.e(TAG, "Logout failed", e)
         }
     }
 

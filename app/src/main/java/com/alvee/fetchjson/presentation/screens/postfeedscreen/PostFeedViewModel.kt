@@ -43,11 +43,6 @@ class PostFeedViewModel @Inject constructor(
             _state.value = _state.value.copy(isLoading = true)
             try {
                 val newPosts = getPostsUsecase(userId = 1, startIndex = start)
-                //Log.d(TAG, "getPosts: ${newPosts.indices}")
-                Log.d(
-                    TAG,
-                    "getPosts: ${(_state.value.postList + newPosts).toMutableList().indices}"
-                )
                 _state.value = _state.value.copy(
                     postList = (_state.value.postList + newPosts).toMutableList(),
                     isLoading = false,
