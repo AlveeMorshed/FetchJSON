@@ -1,4 +1,4 @@
-package com.alvee.fetchjson.presentation.screens.registrationscreen
+package com.alvee.fetchjson.presentation.screens.registration
 
 data class RegisterUiState(
     val email: String = "",

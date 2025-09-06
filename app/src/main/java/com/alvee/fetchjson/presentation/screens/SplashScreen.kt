@@ -22,6 +22,8 @@ import com.alvee.fetchjson.R
 import com.alvee.fetchjson.utils.DataStoreManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun SplashScreen(
@@ -31,11 +33,14 @@ fun SplashScreen(
     val dataStoreManager = DataStoreManager.getInstance(context)
     var isUserLoggedIn by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(key1 = true) {
-        isUserLoggedIn = dataStoreManager.isUserLoggedIn().first()
+        val userLoggedIn = withContext(Dispatchers.IO) {
+            dataStoreManager.isUserLoggedIn().first()
+        }
+        isUserLoggedIn = userLoggedIn
         delay(2000)
         navHostController.navigateUp()
         if (isUserLoggedIn) {
-            navHostController.navigate(Screens.PostFeedScreen.route) {
+            navHostController.navigate(Screens.HomeScreen.route) {
                 popUpTo(navHostController.graph.startDestinationId) { inclusive = true }
             }
         } else {

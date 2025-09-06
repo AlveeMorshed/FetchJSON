@@ -22,4 +22,9 @@
     <string name="register_button_text">Register Account</string>
     <string name="have_an_account_text">"Already have an account? "</string>
     <string name="go_to_login_page_text">Login here</string>
+    <string name="post_feed_screen_title_text">News Feed</string>
+    <string name="user_id_text">User ID:</string>
+    <string name="email_text">Email:</string>
+    <string name="account_screen_title">Account</string>
+    <string name="post_feed_screen_title">News Feed</string>
 </resources>

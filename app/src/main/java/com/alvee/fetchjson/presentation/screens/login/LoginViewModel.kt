@@ -1,4 +1,4 @@
-package com.alvee.fetchjson.presentation.screens.loginscreen
+package com.alvee.fetchjson.presentation.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,7 +1,7 @@
-package com.alvee.fetchjson.presentation.screens.postfeedscreen
+package com.alvee.fetchjson.presentation.screens.postfeed
 
 import android.util.Log
-import androidx.compose.foundation.background
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,8 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.alvee.fetchjson.R
 import com.alvee.fetchjson.presentation.screens.Screens
+import com.alvee.fetchjson.presentation.screens.home.HomeScreenViewModel
 import com.alvee.fetchjson.utils.DataStoreManager
 import com.alvee.fetchjson.utils.NetworkStatus
 import kotlinx.coroutines.CoroutineScope
@@ -39,14 +40,14 @@ private const val TAG = "PostFeedScreen"
 
 @Composable
 fun PostFeedScreen(
-    navHostController: NavHostController,
-    postFeedViewModel: PostFeedViewModel = hiltViewModel()
+    postFeedViewModel: PostFeedViewModel = hiltViewModel(),
+    homeScreenViewModel: HomeScreenViewModel
 ) {
     val context = LocalContext.current
-    val dataStoreManager = DataStoreManager.getInstance(context)
     val state by postFeedViewModel.state.collectAsState()
     val networkStatus by postFeedViewModel.networkStatus.collectAsState()
     val listState = rememberLazyListState()
+    homeScreenViewModel.updateScreenTitle(stringResource(R.string.post_feed_screen_title))
 
     val isAtLastPost by remember {
         derivedStateOf {
@@ -54,36 +55,26 @@ fun PostFeedScreen(
             lastVisiblePostIndex == state.postList.lastIndex
         }
     }
+
+    BackHandler {  }
+
     Log.d(TAG, "PostFeedScreen: NetworkStatus $networkStatus")
     LaunchedEffect(isAtLastPost, networkStatus) {
         Log.d(TAG, "PostFeedScreen: LaunchedEffect Called")
         Log.d(TAG, "PostFeedScreen: ${state.postList.size}")
-        when(networkStatus){
+        when (networkStatus) {
             NetworkStatus.Available -> {
                 Log.d(TAG, "Network Available - fetching from remote")
                 if (isAtLastPost || state.postList.isEmpty()) postFeedViewModel.getPosts(state.postList.size)
             }
+
             else -> {
                 Log.d(TAG, "Network Unavailable - getting cached posts")
-                postFeedViewModel.getCachedPosts(dataStoreManager.getCurrentUserId()?:0)
+                postFeedViewModel.getCachedPosts(state.currentUserId)
             }
         }
     }
-
-    if (networkStatus == NetworkStatus.Lost || networkStatus == NetworkStatus.Unavailable) {
-        Log.d(TAG, "PostFeedScreen: $networkStatus")
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.error)
-                .padding(8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(R.string.offline_mode_banner_text),
-            )
-        }
-    }
+    BackHandler {  }
     if (state.isLoading && state.postList.isEmpty()) {
         Box(
             modifier = Modifier
@@ -103,23 +94,6 @@ fun PostFeedScreen(
         }
     }
     Column {
-        Button(
-            onClick = {
-                CoroutineScope(Dispatchers.IO).launch {
-                    dataStoreManager.logoutUser()
-
-                }
-                navHostController.navigate(Screens.LoginScreen.route) {
-                    popUpTo(Screens.PostFeedScreen.route) { inclusive = true }
-                }
-            },
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-        ) {
-            Text(text = stringResource(R.string.logout_button_text))
-        }
-
         LazyColumn(
             state = listState
         ) {
@@ -133,8 +107,10 @@ fun PostFeedScreen(
                         Text(text = post.postId.toString())
                         Text(text = post.title)
                     }
-                    Text(text = post.userId.toString(),
-                        modifier = Modifier.align(Alignment.TopEnd))
+                    Text(
+                        text = post.userId.toString(),
+                        modifier = Modifier.align(Alignment.TopEnd)
+                    )
 
                 }
 

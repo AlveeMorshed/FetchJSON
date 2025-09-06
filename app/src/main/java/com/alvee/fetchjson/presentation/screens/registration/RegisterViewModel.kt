@@ -1,4 +1,4 @@
-package com.alvee.fetchjson.presentation.screens.registrationscreen
+package com.alvee.fetchjson.presentation.screens.registration
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlinx.coroutines.flow.first
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(

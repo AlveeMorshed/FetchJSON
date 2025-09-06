@@ -7,9 +7,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.alvee.fetchjson.presentation.screens.Screens
 import com.alvee.fetchjson.presentation.screens.SplashScreen
-import com.alvee.fetchjson.presentation.screens.loginscreen.LoginScreen
-import com.alvee.fetchjson.presentation.screens.postfeedscreen.PostFeedScreen
-import com.alvee.fetchjson.presentation.screens.registrationscreen.RegisterScreen
+import com.alvee.fetchjson.presentation.screens.home.HomeScreen
+import com.alvee.fetchjson.presentation.screens.login.LoginScreen
+import com.alvee.fetchjson.presentation.screens.registration.RegisterScreen
 
 @Composable
 fun Navigation(
@@ -23,11 +23,6 @@ fun Navigation(
         composable(route = Screens.SplashScreen.route) {
             SplashScreen(
                 navHostController = navController
-            )
-        }
-        composable(route = Screens.PostFeedScreen.route) {
-            PostFeedScreen(
-                navHostController = navController,
             )
         }
         composable(route = Screens.RegisterScreen.route) {
@@ -53,7 +48,7 @@ fun Navigation(
             LoginScreen(
                 navHostController = navController,
                 onLoginSuccess = {
-                    navController.navigate(Screens.PostFeedScreen.route) {
+                    navController.navigate(Screens.HomeScreen.route) {
                         popUpTo(Screens.LoginScreen.route) {
                             inclusive = true
                         }
@@ -68,6 +63,10 @@ fun Navigation(
                 }
             )
         }
-
+        composable(route = Screens.HomeScreen.route) {
+            HomeScreen(
+                navController = navController
+            )
+        }
     }
 }

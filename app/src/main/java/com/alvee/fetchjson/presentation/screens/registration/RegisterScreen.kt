@@ -1,4 +1,4 @@
-package com.alvee.fetchjson.presentation.screens.registrationscreen
+package com.alvee.fetchjson.presentation.screens.registration
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -84,8 +84,8 @@ fun RegisterScreen(
         OutlinedTextField(
             value = uiState.email,
             onValueChange = { registerViewModel.updateEmail(it.filterEmailInput()) },
-            label = { stringResource(R.string.email_label_text) },
-            placeholder = { stringResource(R.string.email_placeholder_text) },
+            label = { Text(stringResource(R.string.email_label_text)) },
+            placeholder = { Text(stringResource(R.string.email_placeholder_text)) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Email,
@@ -94,7 +94,6 @@ fun RegisterScreen(
         )
 
         Spacer(modifier = Modifier.height(12.dp))
-
 
         OutlinedTextField(
             value = uiState.password,

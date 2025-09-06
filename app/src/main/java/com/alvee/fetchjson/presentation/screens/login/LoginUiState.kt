@@ -1,4 +1,4 @@
-package com.alvee.fetchjson.presentation.screens.loginscreen
+package com.alvee.fetchjson.presentation.screens.login
 
 data class LoginUiState(
     val email: String = "",

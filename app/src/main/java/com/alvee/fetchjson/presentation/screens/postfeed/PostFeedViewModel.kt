@@ -1,10 +1,11 @@
-package com.alvee.fetchjson.presentation.screens.postfeedscreen
+package com.alvee.fetchjson.presentation.screens.postfeed
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alvee.fetchjson.domain.usecase.GetCachedPostsUsecase
 import com.alvee.fetchjson.domain.usecase.GetPostsUsecase
+import com.alvee.fetchjson.utils.DataStoreManager
 import com.alvee.fetchjson.utils.NetworkConnectivityObserver
 import com.alvee.fetchjson.utils.NetworkStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +21,8 @@ private const val TAG = "PostFeedViewModel"
 class PostFeedViewModel @Inject constructor(
     private val getPostsUsecase: GetPostsUsecase,
     private val getCachedPostsUsecase: GetCachedPostsUsecase,
-    private val networkConnectivityObserver: NetworkConnectivityObserver
+    private val networkConnectivityObserver: NetworkConnectivityObserver,
+    private val dataStoreManager: DataStoreManager
 ) : ViewModel() {
     private val _state = MutableStateFlow(PostFeedState())
     val state = _state.asStateFlow()
@@ -35,6 +37,15 @@ class PostFeedViewModel @Inject constructor(
             networkConnectivityObserver.observe().collect { status ->
                 _networkStatus.value = status
             }
+        }
+        loadCurrentUserId()
+    }
+    fun loadCurrentUserId(){
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentUserId = dataStoreManager.getCurrentUserId()
+            _state.value = _state.value.copy(
+                currentUserId = currentUserId ?: 0
+            )
         }
     }
 
