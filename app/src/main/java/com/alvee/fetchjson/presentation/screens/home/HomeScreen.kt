@@ -37,18 +37,21 @@ import androidx.navigation.compose.rememberNavController
 import com.alvee.fetchjson.R
 import com.alvee.fetchjson.presentation.screens.Screens
 import com.alvee.fetchjson.presentation.screens.account.AccountScreen
+import com.alvee.fetchjson.presentation.screens.favorite.FavoritesScreen
 import com.alvee.fetchjson.presentation.screens.postfeed.PostFeedScreen
+import com.alvee.fetchjson.presentation.screens.postfeed.SharedFeedViewModel
+import com.alvee.fetchjson.utils.Constants
 import com.alvee.fetchjson.utils.NetworkStatus
 
 sealed class BottomNavItem(val route: String, val label: String, val icon: Int) {
     object PostFeed :
-        BottomNavItem(Screens.PostFeedScreen.route, "News Feed", R.drawable.outline_dynamic_feed_24)
+        BottomNavItem(Screens.PostFeedScreen.route, Constants.POST_FEED_SCREEN_TITLE, R.drawable.outline_dynamic_feed_24)
 
     object Favourites :
-        BottomNavItem(Screens.FavoritesScreen.route, "Favourites", R.drawable.outline_favorite_24)
+        BottomNavItem(Screens.FavoritesScreen.route, Constants.FAVORITES_SCREEN_TITLE, R.drawable.outline_favorite_24)
 
     object Account :
-        BottomNavItem(Screens.AccountScreen.route, "Account", R.drawable.baseline_account_circle_24)
+        BottomNavItem(Screens.AccountScreen.route, Constants.ACCOUNT_SCREEN_TITLE, R.drawable.baseline_account_circle_24)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,22 +102,20 @@ fun HomeScreen(
                         )
                     }
                 }
+                val sharedFeedViewModel = hiltViewModel<SharedFeedViewModel>()
                 NavHost(
                     navController = bottomNavController,
                     startDestination = BottomNavItem.PostFeed.route,
                 ) {
                     composable(BottomNavItem.PostFeed.route) {
-                        PostFeedScreen(
-                            homeScreenViewModel = homeScreenViewModel,
-                        )
+                        PostFeedScreen(sharedFeedViewModel)
                     }
                     composable(BottomNavItem.Favourites.route) {
-                        FavouritesScreen()
+                        FavoritesScreen(sharedFeedViewModel)
                     }
                     composable(BottomNavItem.Account.route) {
                         AccountScreen(
                             navHostController = navController,
-                            homeScreenViewModel = homeScreenViewModel
                         )
                     }
                 }
@@ -151,7 +152,7 @@ fun BottomNavigationBar(
                 label = { Text(item.label) },
                 selected = currentRoute == item.route,
                 onClick = {
-                    homeScreenViewModel.updateScreenTitle(screenTitle = item.label)
+                    homeScreenViewModel.updateScreenTitle(item.label)
                     bottomNavController.navigate(item.route) {
                         popUpTo(bottomNavController.graph.startDestinationId)
                         launchSingleTop = true
@@ -179,9 +180,4 @@ fun FeedScreen() {
 }
 
 
-@Composable
-fun FavouritesScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Favourites Screen")
-    }
-}
+

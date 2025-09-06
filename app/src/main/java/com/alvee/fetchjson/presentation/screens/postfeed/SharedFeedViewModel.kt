@@ -3,8 +3,9 @@ package com.alvee.fetchjson.presentation.screens.postfeed
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alvee.fetchjson.domain.usecase.GetCachedPostsUsecase
-import com.alvee.fetchjson.domain.usecase.GetPostsUsecase
+import com.alvee.fetchjson.domain.usecase.GetCachedPostsUseCase
+import com.alvee.fetchjson.domain.usecase.GetPostsUseCase
+import com.alvee.fetchjson.domain.usecase.ToggleFavoriteUseCase
 import com.alvee.fetchjson.utils.DataStoreManager
 import com.alvee.fetchjson.utils.NetworkConnectivityObserver
 import com.alvee.fetchjson.utils.NetworkStatus
@@ -15,16 +16,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-private const val TAG = "PostFeedViewModel"
+private const val TAG = "SharedFeedViewModel"
 
 @HiltViewModel
-class PostFeedViewModel @Inject constructor(
-    private val getPostsUsecase: GetPostsUsecase,
-    private val getCachedPostsUsecase: GetCachedPostsUsecase,
+class SharedFeedViewModel @Inject constructor(
+    private val getPostsUseCase: GetPostsUseCase,
+    private val getCachedPostsUseCase: GetCachedPostsUseCase,
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val networkConnectivityObserver: NetworkConnectivityObserver,
     private val dataStoreManager: DataStoreManager
 ) : ViewModel() {
-    private val _state = MutableStateFlow(PostFeedState())
+    private val _state = MutableStateFlow(SharedFeedState())
     val state = _state.asStateFlow()
 
     private val _networkStatus = MutableStateFlow(
@@ -39,6 +41,7 @@ class PostFeedViewModel @Inject constructor(
             }
         }
         loadCurrentUserId()
+        getCachedPosts(userId = _state.value.currentUserId)
     }
     fun loadCurrentUserId(){
         viewModelScope.launch(Dispatchers.IO) {
@@ -53,9 +56,10 @@ class PostFeedViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _state.value = _state.value.copy(isLoading = true)
             try {
-                val newPosts = getPostsUsecase(userId = 1, startIndex = start)
+                val newPosts = getPostsUseCase(startIndex = start)
                 _state.value = _state.value.copy(
                     postList = (_state.value.postList + newPosts).toMutableList(),
+                    favoritePostList = (_state.value.postList + newPosts).filter { it.isFavorite }.toMutableList(),
                     isLoading = false,
                     error = ""
                 )
@@ -72,10 +76,11 @@ class PostFeedViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _state.value = _state.value.copy(isLoading = true)
             try {
-                val cachedPosts = getCachedPostsUsecase(userId)
-                Log.d(TAG, "getCachedPosts: called")
+                val cachedPosts = getCachedPostsUseCase(userId)
+                Log.d(TAG, "getCachedPosts: called $userId")
                 _state.value = _state.value.copy(
                     postList = cachedPosts.toMutableList(),
+                    favoritePostList = cachedPosts.filter { it.isFavorite }.toMutableList(),
                     isLoading = false,
                     error = ""
                 )
@@ -84,6 +89,37 @@ class PostFeedViewModel @Inject constructor(
                     isLoading = false,
                     error = e.message ?: "An unexpected error occurred"
                 )
+            }
+        }
+    }
+
+    fun getFavoritePosts(userId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.d(TAG, "getFavoritePosts: $userId")
+            _state.value = _state.value.copy(isLoading = true)
+            try {
+                val favoritePosts = getCachedPostsUseCase(userId).filter { it.isFavorite }
+                _state.value = _state.value.copy(
+                    favoritePostList = favoritePosts.toMutableList(),
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = e.message.toString()
+                )
+            }
+        }
+    }
+
+    fun toggleFavorite(postId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = toggleFavoriteUseCase(postId, _state.value.currentUserId)
+                Log.d(TAG, "toggleFavorite: $result")
+                getCachedPosts(_state.value.currentUserId)
+            }catch (e: Exception){
+                Log.e(TAG, "toggleFavorite: ${e.message}", )
             }
         }
     }

@@ -9,8 +9,9 @@ import com.alvee.fetchjson.data.datasource.RemoteDatasource
 import com.alvee.fetchjson.data.remote.ApiService
 import com.alvee.fetchjson.data.repository.PostFeedRepositoryImpl
 import com.alvee.fetchjson.domain.repository.PostFeedRepository
-import com.alvee.fetchjson.domain.usecase.GetCachedPostsUsecase
-import com.alvee.fetchjson.domain.usecase.GetPostsUsecase
+import com.alvee.fetchjson.domain.usecase.GetCachedPostsUseCase
+import com.alvee.fetchjson.domain.usecase.GetPostsUseCase
+import com.alvee.fetchjson.domain.usecase.ToggleFavoriteUseCase
 import com.alvee.fetchjson.utils.Constants.BASE_URL
 import com.alvee.fetchjson.utils.DataStoreManager
 import com.alvee.fetchjson.utils.NetworkConnectivityObserver
@@ -105,8 +106,8 @@ object Module {
     @Singleton
     fun provideGetPostsUseCase(
         postFeedRepository: PostFeedRepository
-    ): GetPostsUsecase {
-        return GetPostsUsecase(
+    ): GetPostsUseCase {
+        return GetPostsUseCase(
             postFeedRepository = postFeedRepository
         )
     }
@@ -115,8 +116,17 @@ object Module {
     @Singleton
     fun provideGetCachedPostsUseCase(
         postFeedRepository: PostFeedRepository
-    ): GetCachedPostsUsecase {
-        return GetCachedPostsUsecase(
+    ): GetCachedPostsUseCase {
+        return GetCachedPostsUseCase(
+            postFeedRepository = postFeedRepository
+        )
+    }
+    @Provides
+    @Singleton
+    fun provideToggleFavoriteUseCase(
+        postFeedRepository: PostFeedRepository
+    ): ToggleFavoriteUseCase {
+        return ToggleFavoriteUseCase(
             postFeedRepository = postFeedRepository
         )
     }

@@ -21,17 +21,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.alvee.fetchjson.R
 import com.alvee.fetchjson.presentation.screens.Screens
-import com.alvee.fetchjson.presentation.screens.home.HomeScreenViewModel
 
 @Composable
 fun AccountScreen(
     accountScreenViewModel: AccountScreenViewModel = hiltViewModel(),
-    homeScreenViewModel: HomeScreenViewModel,
     navHostController: NavHostController
 ) {
     val uiState by accountScreenViewModel.uiState.collectAsState()
-    homeScreenViewModel.updateScreenTitle(stringResource(R.string.account_screen_title))
-    BackHandler {  }
+    BackHandler { }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             modifier = Modifier.fillMaxSize(),

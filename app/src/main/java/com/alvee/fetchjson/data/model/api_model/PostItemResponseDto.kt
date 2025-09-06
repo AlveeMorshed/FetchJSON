@@ -7,11 +7,12 @@ data class PostItemResponseDto(
     val id: Int,
     val title: String,
 )
-fun PostItemResponseDto.toDomain(userId: Int): PostItem{
+fun PostItemResponseDto.toDomain(userId: Int, isFavorite: Boolean = false): PostItem{
     return PostItem(
         body = body,
         postId = id,
         title = title,
-        userId = userId
+        userId = userId,
+        isFavorite = isFavorite
     )
 }

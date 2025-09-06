@@ -1,5 +1,6 @@
 package com.alvee.fetchjson.presentation.screens.account
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alvee.fetchjson.utils.DataStoreManager
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val TAG = "AccountScreenViewModel"
 @HiltViewModel
 class AccountScreenViewModel @Inject constructor(
     private val dataStoreManager: DataStoreManager
@@ -26,6 +28,7 @@ class AccountScreenViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val email = dataStoreManager.getCurrentUserEmail()
             val userId = dataStoreManager.getCurrentUserId()
+            Log.d(TAG, "loadUserDetails: $email, $userId")
             _uiState.value = _uiState.value.copy(
                 email = email.toString(),
                 userId = userId ?: 0

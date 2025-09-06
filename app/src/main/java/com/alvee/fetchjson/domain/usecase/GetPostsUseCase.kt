@@ -4,10 +4,10 @@ import com.alvee.fetchjson.domain.model.PostItem
 import com.alvee.fetchjson.domain.repository.PostFeedRepository
 import javax.inject.Inject
 
-class GetPostsUsecase @Inject constructor(
+class GetPostsUseCase @Inject constructor(
     private val postFeedRepository: PostFeedRepository
 ) {
-    suspend operator fun invoke(userId: Int, startIndex: Int): List<PostItem> {
-        return postFeedRepository.getPosts(userId, startIndex)
+    suspend operator fun invoke(startIndex: Int): List<PostItem> {
+        return postFeedRepository.getPosts(startIndex)
     }
 }

@@ -18,29 +18,56 @@ class PostFeedRepositoryImpl @Inject constructor(
     private val remoteDatasource: RemoteDatasource,
     private val dataStoreManager: DataStoreManager
 ) : PostFeedRepository {
-    override suspend fun getPosts(userId: Int, startIndex: Int): List<PostItem> {
+    override suspend fun getPosts(startIndex: Int): List<PostItem> {
         val currentUserId = dataStoreManager.getCurrentUserId()
         Log.d(TAG, "getPosts: $currentUserId")
         val fetchedPosts = remoteDatasource.getPosts(
             start = startIndex,
             limit = 20
         )
+        var fetchedPostsWithFavoriteStatus = mutableListOf<PostItem>()
         if (fetchedPosts.isNotEmpty() && currentUserId != null) {
             Log.d(TAG, "getPosts: inserting fetchedPosts")
+            val favoritePostIDs = localDatasource.getFavoritePosts(currentUserId).map { it.postId }
             localDatasource.insertFetchedPosts(fetchedPosts.map {
-                PostFeedEntity(
-                    postId = it.id,
-                    userId = currentUserId,
-                    title = it.title,
-                    body = it.body,
-                )
+                if (it.id in favoritePostIDs) {
+                    Log.d(TAG, "getPosts: post ${it.id} is favorite")
+                    PostFeedEntity(
+                        postId = it.id,
+                        userId = currentUserId,
+                        title = it.title,
+                        body = it.body,
+                        isFavorite = true
+                    )
+                } else {
+                    PostFeedEntity(
+                        postId = it.id,
+                        userId = currentUserId,
+                        title = it.title,
+                        body = it.body,
+                        isFavorite = false
+                    )
+                }
+
             })
+            fetchedPostsWithFavoriteStatus = fetchedPosts.map {
+                if(it.id in favoritePostIDs){
+                    it.toDomain(userId = currentUserId, isFavorite = true)
+                }else{
+                    it.toDomain(userId = currentUserId, isFavorite = false)
+                }
+
+            }.toMutableList()
         }
-        return fetchedPosts.map { it.toDomain(userId = currentUserId?:0 ) }
+        return fetchedPostsWithFavoriteStatus
     }
 
     override suspend fun getCachedPosts(userId: Int): List<PostItem> {
         val cachedPosts = localDatasource.getPosts(userId)
         return cachedPosts.map { it.toDomain() }
+    }
+
+    override suspend fun toggleFavorite(postId: Int, userId: Int): Int {
+        return localDatasource.toggleFavorite(postId, userId)
     }
 }

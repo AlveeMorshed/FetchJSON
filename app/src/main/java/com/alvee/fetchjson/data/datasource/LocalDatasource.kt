@@ -14,4 +14,10 @@ class LocalDatasource @Inject constructor(
     suspend fun getPosts(userId: Int): List<PostFeedEntity> {
         return postFeedDao.getPostsForUser(userId)
     }
+    suspend fun getFavoritePosts(userId: Int): List<PostFeedEntity> {
+        return postFeedDao.getFavoritePosts(userId)
+    }
+    suspend fun toggleFavorite(postId: Int, userId: Int): Int {
+        return postFeedDao.toggleFavorite(postId, userId)
+    }
 }

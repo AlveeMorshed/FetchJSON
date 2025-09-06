@@ -1,6 +1,5 @@
-package com.alvee.fetchjson.presentation.screens.postfeed
+package com.alvee.fetchjson.presentation.screens.favorite
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
@@ -20,55 +18,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alvee.fetchjson.R
 import com.alvee.fetchjson.presentation.components.PostCard
-import com.alvee.fetchjson.utils.NetworkStatus
-
-private const val TAG = "PostFeedScreen"
+import com.alvee.fetchjson.presentation.screens.postfeed.SharedFeedViewModel
 
 @Composable
-fun PostFeedScreen(
-    sharedFeedViewModel: SharedFeedViewModel,
+fun FavoritesScreen(
+    sharedFeedViewModel: SharedFeedViewModel
 ) {
     val state by sharedFeedViewModel.state.collectAsState()
-    val networkStatus by sharedFeedViewModel.networkStatus.collectAsState()
-    val listState = rememberLazyListState()
-
-    val isAtLastPost by remember {
-        derivedStateOf {
-            val lastVisiblePostIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-            lastVisiblePostIndex == state.postList.lastIndex
-        }
-    }
-
     BackHandler { }
 
-    Log.d(TAG, "PostFeedScreen: NetworkStatus $networkStatus")
-    LaunchedEffect(isAtLastPost, networkStatus) {
-        Log.d(TAG, "PostFeedScreen: LaunchedEffect Called")
-        Log.d(TAG, "PostFeedScreen: ${state.postList.size}")
-        when (networkStatus) {
-            NetworkStatus.Available -> {
-                Log.d(TAG, "Network Available - fetching from remote")
-                if (isAtLastPost || state.postList.isEmpty()) sharedFeedViewModel.getPosts(state.postList.size)
-            }
-
-            else -> {
-                Log.d(TAG, "Network Unavailable - getting cached posts")
-                sharedFeedViewModel.getCachedPosts(state.currentUserId)
-            }
-        }
+    LaunchedEffect(Unit) {
+        sharedFeedViewModel.getFavoritePosts(state.currentUserId)
     }
-    if (state.isLoading && state.postList.isEmpty()) {
+
+    if (state.isLoading && state.favoritePostList.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxSize(),
@@ -77,7 +49,7 @@ fun PostFeedScreen(
             CircularProgressIndicator()
         }
     }
-    if (state.postList.isEmpty() && !state.isLoading && state.error.isEmpty()) {
+    if (state.favoritePostList.isEmpty() && !state.isLoading && state.error.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxSize(),
@@ -87,13 +59,11 @@ fun PostFeedScreen(
         }
     }
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-
         OutlinedTextField(
             value = "",
             onValueChange = {},
@@ -106,31 +76,26 @@ fun PostFeedScreen(
             shape = RoundedCornerShape(12.dp)
         )
         Spacer(modifier = Modifier.height(6.dp))
+
         LazyColumn(
-            state = listState,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(state.postList) { post ->
+            items(state.favoritePostList, key = { it.postId }) { post ->
                 PostCard(
                     post = post,
-                    onFavoriteClick = {
-                        sharedFeedViewModel.toggleFavorite(post.postId)
+                    onFavoriteClick = { postId ->
+                        sharedFeedViewModel.toggleFavorite(postId)
                     }
                 )
-
-            }
-            if (state.isLoading && state.postList.isNotEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun FavPreview(modifier: Modifier = Modifier) {
+    FavoritesScreen(
+        hiltViewModel()
+    )
 }
