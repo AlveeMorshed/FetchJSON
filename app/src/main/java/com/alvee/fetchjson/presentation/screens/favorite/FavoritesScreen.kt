@@ -34,13 +34,20 @@ fun FavoritesScreen(
     sharedFeedViewModel: SharedFeedViewModel
 ) {
     val state by sharedFeedViewModel.state.collectAsState()
+    val displayedFavorites =
+        if (state.searchQuery.isEmpty()) state.favoritePostList else state.filteredFavoritePostList
+
     BackHandler { }
 
     LaunchedEffect(Unit) {
         sharedFeedViewModel.getFavoritePosts(state.currentUserId)
     }
 
-    if (state.isLoading && state.favoritePostList.isEmpty()) {
+    LaunchedEffect(state.favoritePostList) {
+        sharedFeedViewModel.updateSearchQuery(state.searchQuery)
+    }
+
+    if (state.isLoading && displayedFavorites.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxSize(),
@@ -49,13 +56,19 @@ fun FavoritesScreen(
             CircularProgressIndicator()
         }
     }
-    if (state.favoritePostList.isEmpty() && !state.isLoading && state.error.isEmpty()) {
+    if (displayedFavorites.isEmpty() && !state.isLoading && state.error.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = stringResource(R.string.no_posts_text))
+            Text(
+                text = if (state.searchQuery.isEmpty())
+                    stringResource(R.string.no_posts_text)
+                else stringResource(
+                    R.string.no_favorite_posts_found_text
+                )
+            )
         }
     }
 
@@ -65,13 +78,13 @@ fun FavoritesScreen(
             .padding(horizontal = 16.dp)
     ) {
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            placeholder = { Text("Search posts...") },
+            value = state.searchQuery,
+            onValueChange = { sharedFeedViewModel.updateSearchQuery(it) },
+            placeholder = { Text(stringResource(R.string.search_bar_placeholder_text)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp)
-                .height(50.dp),
+                .padding(bottom = 4.dp)
+                .height(52.dp),
             singleLine = true,
             shape = RoundedCornerShape(12.dp)
         )
@@ -80,7 +93,7 @@ fun FavoritesScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(state.favoritePostList, key = { it.postId }) { post ->
+            items(displayedFavorites, key = { it.postId }) { post ->
                 PostCard(
                     post = post,
                     onFavoriteClick = { postId ->

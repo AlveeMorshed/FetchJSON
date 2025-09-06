@@ -25,10 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.alvee.fetchjson.R
 import com.alvee.fetchjson.presentation.components.PostCard
 import com.alvee.fetchjson.utils.NetworkStatus
@@ -43,6 +41,8 @@ fun PostFeedScreen(
     val networkStatus by sharedFeedViewModel.networkStatus.collectAsState()
     val listState = rememberLazyListState()
 
+    val displayedPosts = if (state.searchQuery.isEmpty()) state.postList else state.filteredPostList
+
     val isAtLastPost by remember {
         derivedStateOf {
             val lastVisiblePostIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
@@ -51,6 +51,10 @@ fun PostFeedScreen(
     }
 
     BackHandler { }
+
+    LaunchedEffect(state.postList) {
+        sharedFeedViewModel.updateSearchQuery(state.searchQuery)
+    }
 
     Log.d(TAG, "PostFeedScreen: NetworkStatus $networkStatus")
     LaunchedEffect(isAtLastPost, networkStatus) {
@@ -68,7 +72,7 @@ fun PostFeedScreen(
             }
         }
     }
-    if (state.isLoading && state.postList.isEmpty()) {
+    if (state.isLoading && displayedPosts.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxSize(),
@@ -77,13 +81,19 @@ fun PostFeedScreen(
             CircularProgressIndicator()
         }
     }
-    if (state.postList.isEmpty() && !state.isLoading && state.error.isEmpty()) {
+    if (displayedPosts.isEmpty() && !state.isLoading && state.error.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = stringResource(R.string.no_posts_text))
+            Text(
+                text = if (state.searchQuery.isEmpty())
+                    stringResource(R.string.no_posts_text)
+                else stringResource(
+                    R.string.no_posts_found_text
+                )
+            )
         }
     }
 
@@ -95,13 +105,13 @@ fun PostFeedScreen(
     ) {
 
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            placeholder = { Text("Search posts...") },
+            value = state.searchQuery,
+            onValueChange = { sharedFeedViewModel.updateSearchQuery(it) },
+            placeholder = { Text(stringResource(R.string.search_bar_placeholder_text)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp)
-                .height(50.dp),
+                .padding(bottom = 4.dp)
+                .height(52.dp),
             singleLine = true,
             shape = RoundedCornerShape(12.dp)
         )
@@ -110,7 +120,7 @@ fun PostFeedScreen(
             state = listState,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(state.postList) { post ->
+            items(displayedPosts) { post ->
                 PostCard(
                     post = post,
                     onFavoriteClick = {
@@ -119,7 +129,7 @@ fun PostFeedScreen(
                 )
 
             }
-            if (state.isLoading && state.postList.isNotEmpty()) {
+            if (state.isLoading && displayedPosts.isNotEmpty()) {
                 item {
                     Box(
                         modifier = Modifier

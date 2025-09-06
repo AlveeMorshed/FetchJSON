@@ -9,4 +9,7 @@ data class SharedFeedState(
     val currentUserId: Int = 0,
     val postList: MutableList<PostItem> = mutableListOf(),
     val favoritePostList: MutableList<PostItem> = mutableListOf(),
+    val searchQuery: String = "",
+    val filteredPostList: List<PostItem> = emptyList(),
+    val filteredFavoritePostList: List<PostItem> = emptyList()
 )

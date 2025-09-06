@@ -27,4 +27,9 @@
     <string name="email_text">Email:</string>
     <string name="account_screen_title">Account</string>
     <string name="post_feed_screen_title">News Feed</string>
+    <string name="unmark_favorite_text">Unmark Favorite</string>
+    <string name="mark_as_favorite_text">Mark as Favorite</string>
+    <string name="no_posts_found_text">No posts found</string>
+    <string name="no_favorite_posts_found_text">No favorite posts found</string>
+    <string name="search_bar_placeholder_text">Search posts...</string>
 </resources>

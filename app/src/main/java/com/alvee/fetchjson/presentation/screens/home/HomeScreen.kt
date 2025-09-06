@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -45,13 +44,25 @@ import com.alvee.fetchjson.utils.NetworkStatus
 
 sealed class BottomNavItem(val route: String, val label: String, val icon: Int) {
     object PostFeed :
-        BottomNavItem(Screens.PostFeedScreen.route, Constants.POST_FEED_SCREEN_TITLE, R.drawable.outline_dynamic_feed_24)
+        BottomNavItem(
+            Screens.PostFeedScreen.route,
+            Constants.POST_FEED_SCREEN_TITLE,
+            R.drawable.outline_dynamic_feed_24
+        )
 
     object Favourites :
-        BottomNavItem(Screens.FavoritesScreen.route, Constants.FAVORITES_SCREEN_TITLE, R.drawable.outline_favorite_24)
+        BottomNavItem(
+            Screens.FavoritesScreen.route,
+            Constants.FAVORITES_SCREEN_TITLE,
+            R.drawable.outline_favorite_24
+        )
 
     object Account :
-        BottomNavItem(Screens.AccountScreen.route, Constants.ACCOUNT_SCREEN_TITLE, R.drawable.baseline_account_circle_24)
+        BottomNavItem(
+            Screens.AccountScreen.route,
+            Constants.ACCOUNT_SCREEN_TITLE,
+            R.drawable.baseline_account_circle_24
+        )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +74,7 @@ fun HomeScreen(
     val state by homeScreenViewModel.state.collectAsState()
     val networkStatus by homeScreenViewModel.networkStatus.collectAsState()
     val bottomNavController = rememberNavController()
-    BackHandler {  }
+    BackHandler { }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -169,14 +180,6 @@ fun HomeScreenPreview(modifier: Modifier = Modifier) {
     HomeScreen(
         navController = rememberNavController()
     )
-}
-
-// Dummy screens
-@Composable
-fun FeedScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Feed Screen")
-    }
 }
 
 

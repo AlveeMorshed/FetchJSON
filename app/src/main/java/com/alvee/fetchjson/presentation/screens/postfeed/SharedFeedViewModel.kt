@@ -123,4 +123,36 @@ class SharedFeedViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateSearchQuery(query: String) {
+        _state.value = _state.value.copy(searchQuery = query)
+        filterPosts()
+    }
+
+    private fun filterPosts() {
+        val query = _state.value.searchQuery.lowercase().trim()
+
+        val filteredPosts = if (query.isEmpty()) {
+            _state.value.postList
+        } else {
+            _state.value.postList.filter { post ->
+                post.title.lowercase().contains(query) ||
+                        post.body.lowercase().contains(query)
+            }
+        }
+
+        val filteredFavorites = if (query.isEmpty()) {
+            _state.value.favoritePostList
+        } else {
+            _state.value.favoritePostList.filter { post ->
+                post.title.lowercase().contains(query) ||
+                        post.body.lowercase().contains(query)
+            }
+        }
+
+        _state.value = _state.value.copy(
+            filteredPostList = filteredPosts,
+            filteredFavoritePostList = filteredFavorites
+        )
+    }
 }
