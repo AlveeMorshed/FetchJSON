@@ -23,7 +23,7 @@ class PostFeedRepositoryImpl @Inject constructor(
         Log.d(TAG, "getPosts: $currentUserId")
         val fetchedPosts = remoteDatasource.getPosts(
             start = startIndex,
-            limit = 20
+            limit = 10
         )
         var fetchedPostsWithFavoriteStatus = mutableListOf<PostItem>()
         if (fetchedPosts.isNotEmpty() && currentUserId != null) {

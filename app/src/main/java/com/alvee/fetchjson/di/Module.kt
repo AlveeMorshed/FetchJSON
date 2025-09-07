@@ -2,6 +2,7 @@ package com.alvee.fetchjson.di
 
 import android.content.Context
 import androidx.room.Room
+import com.alvee.fetchjson.BuildConfig
 import com.alvee.fetchjson.data.database.ContentDatabase
 import com.alvee.fetchjson.data.database.dao.PostFeedDao
 import com.alvee.fetchjson.data.datasource.LocalDatasource
@@ -12,7 +13,6 @@ import com.alvee.fetchjson.domain.repository.PostFeedRepository
 import com.alvee.fetchjson.domain.usecase.GetCachedPostsUseCase
 import com.alvee.fetchjson.domain.usecase.GetPostsUseCase
 import com.alvee.fetchjson.domain.usecase.ToggleFavoriteUseCase
-import com.alvee.fetchjson.utils.Constants.BASE_URL
 import com.alvee.fetchjson.utils.DataStoreManager
 import com.alvee.fetchjson.utils.NetworkConnectivityObserver
 import dagger.Module
@@ -35,6 +35,7 @@ object Module {
     fun provideDataStoreManager(@ApplicationContext context: Context): DataStoreManager {
         return DataStoreManager.getInstance(context)
     }
+
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient =
@@ -49,7 +50,7 @@ object Module {
     @Singleton
     fun provideRetrofit(client: OkHttpClient): Retrofit =
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BuildConfig.BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -121,6 +122,7 @@ object Module {
             postFeedRepository = postFeedRepository
         )
     }
+
     @Provides
     @Singleton
     fun provideToggleFavoriteUseCase(
